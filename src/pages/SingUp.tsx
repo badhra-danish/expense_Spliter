@@ -6,6 +6,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Link } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
+import DummyUserImg from "../assets/dummyusers.png"
+import { UserPen  } from "lucide-react";
+
+import { CreateAccount } from "@/api/apiClient";  
+
 
 function SignUpPage() {
   interface ContactType {
@@ -14,10 +19,10 @@ function SignUpPage() {
   }
 
   interface FormDataType {
+    avatar: File | null;
     displayName: string;
     password: string;
     email: string;
-    avatar: File | null;
     phoneNumber: string;
     contact_list: ContactType[];
   }
@@ -40,7 +45,7 @@ function SignUpPage() {
     phoneNumber: "",
     contact_list: [{ name: "", number: "" }],
   });
-
+  const [preview, setPreview] = React.useState<string | null>(null);
   const [errors, setErrors] = React.useState<FormErrorsType>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -227,6 +232,20 @@ function SignUpPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Proceed with form submission or API call
+      const formdata = new FormData() 
+      if(formData.avatar instanceof File){
+        formdata.append('avatar',formData.avatar)
+      }
+      formdata.append('email', formData.email)
+      formdata.append('displayName' , formData.displayName)
+      formdata.append('password' , formData.password)
+      formdata.append('mobileNumber',formData.phoneNumber)
+      formdata.append('social_login_provider' ,'GOOGLE')
+      formdata.append('contact_list' ,JSON.stringify(formData.contact_list))
+
+      CreateAccount(formdata)
+
+
       console.log("Submitted:", formData);
 
       // Reset form on successful submission
@@ -238,6 +257,7 @@ function SignUpPage() {
         phoneNumber: "",
         contact_list: [{ name: "", number: "" }],
       });
+      setPreview('')
       setErrors({});
 
       alert("Account created successfully!");
@@ -248,16 +268,38 @@ function SignUpPage() {
     }
   };
 
+  // const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+
+  //   if (file) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       avatar: file,
+  //     }));
+
+  //     // Clear avatar error
+  //     if (errors.avatar) {
+  //       setErrors((prev) => ({
+  //         ...prev,
+  //         avatar: undefined,
+  //       }));
+  //     }
+  //   }
+  // };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
       setFormData((prev) => ({
         ...prev,
         avatar: file,
       }));
-
-      // Clear avatar error
+       
       if (errors.avatar) {
         setErrors((prev) => ({
           ...prev,
@@ -266,6 +308,12 @@ function SignUpPage() {
       }
     }
   };
+
+{/*Create the account of the users using api*/}
+
+
+  
+
 
   return (
     <div className="flex items-center justify-center min-h-screen w-screen p-4">
@@ -281,17 +329,38 @@ function SignUpPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Upload */}
           <div>
-            <Label htmlFor="avatar" className="block mb-3 font-medium">
-              Upload Profile Image *
-            </Label>
-            <Input
+            {/* <Input
               id="avatar"
               type="file"
               name="avatar"
               accept="image/*"
               onChange={handleImageUpload}
               className={`${errors.avatar ? "border-red-500" : ""}`}
-            />
+            /> */}
+
+            <div className="relative w-full h-24 flex items-center justify-center">
+              <input
+                id="avatar"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <label htmlFor="avatar" className="cursor-pointer">
+                <div className="relative">
+                <img
+                  src={preview || DummyUserImg} // use a default placeholder if no image
+                  alt="Profile Preview"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                />
+                <UserPen className="absolute bottom-0 right-0 text-gray-700 bg-white border-1 rounded-full p-1  "/>
+                </div>
+                
+              </label>
+            </div>
+            {/* <Label htmlFor="avatar" className="block mb-3 font-medium">
+              Upload Profile Image *
+            </Label> */}
             {errors.avatar && (
               <p className="text-red-500 text-sm mt-1 flex gap-2 items-center">
                 <CircleAlert className="w-3 h-3" />

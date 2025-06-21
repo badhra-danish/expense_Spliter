@@ -4,14 +4,29 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useNavigate } from "react-router-dom";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { CircleAlert } from 'lucide-react';
+import { CircleAlert } from "lucide-react";
+
+import { LoginUser } from "@/api/apiClient";
+import type { AxiosResponse } from "axios";
+
+interface UserResponse {
+  id: string;
+  email: string;
+  password: string;
+  displayName: string;
+  avatarUrl: string;
+  mobileNumber: string;
+  social_login_provider: string;
+}
+
 // Define the form state interface
 interface FormState {
   email: string;
   password: string;
-  acceptTerms: boolean;
+  //acceptTerms: boolean;
   isSubmitting: boolean;
   errors: {
     email?: string;
@@ -25,12 +40,13 @@ interface FormState {
 const initialState: FormState = {
   email: "",
   password: "",
-  acceptTerms: false,
+  //acceptTerms: false,
   isSubmitting: false,
   errors: {},
 };
 
 function Login() {
+  const navigate = useNavigate();
   const [formState, setFormState] = useState<FormState>(initialState);
 
   // Email validation regex
@@ -39,22 +55,25 @@ function Login() {
   // Phone validation regex (basic pattern for various formats)
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
 
-  // Update form field
-  const updateField = (
-    field: keyof Omit<FormState, "errors" | "isSubmitting">,
-    value: string | boolean
-  ) => {
+  // For the HandleChange of the input Field ...
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormState((prev) => ({
       ...prev,
-      [field]: value,
-      errors: {
-        ...prev.errors,
-        [field]: undefined, // Clear field error when updating
-      },
+      [name]: value,
     }));
   };
+  // For the Term checked ....
+  // const handleTermChecked = (checked: boolean) => {
+  //   setFormState((prev) => ({
+  //     ...prev,
+  //     acceptTerms: checked,
+  //   }));
+  // };
 
   // Update form errors
+
   const setErrors = (errors: FormState["errors"]) => {
     setFormState((prev) => ({
       ...prev,
@@ -70,19 +89,7 @@ function Login() {
     }));
   };
 
-  // Clear specific field error
-  const clearFieldError = (field: keyof FormState["errors"]) => {
-    if (formState.errors[field]) {
-      setFormState((prev) => ({
-        ...prev,
-        errors: {
-          ...prev.errors,
-          [field]: undefined,
-        },
-      }));
-    }
-  };
-
+  // Validation Function....
   const validateForm = (): boolean => {
     const newErrors: FormState["errors"] = {};
 
@@ -104,9 +111,9 @@ function Login() {
     }
 
     // Terms acceptance validation
-    if (!formState.acceptTerms) {
-      newErrors.terms = "You must accept the terms and conditions";
-    }
+    // if (!formState.acceptTerms) {
+    //   newErrors.terms = "You must accept the terms and conditions";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -126,11 +133,20 @@ function Login() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Handle successful login here
-      console.log("Login successful", {
+      const payLoad = {
         email: formState.email,
         password: formState.password,
-        acceptTerms: formState.acceptTerms,
-      });
+      };
+      try{
+        const res = await LoginUser(payLoad) as AxiosResponse<{ data:UserResponse }>
+        localStorage.setItem('Users' ,JSON.stringify(res.data.data))
+        navigate('/dashboard')
+      }catch(error){
+        console.error(error)
+      }
+      
+      
+      console.log("Login successful", formState);
 
       // Reset form to initial state
       setFormState(initialState);
@@ -139,18 +155,6 @@ function Login() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateField("email", e.target.value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateField("password", e.target.value);
-  };
-
-  const handleTermsChange = (checked: boolean) => {
-    updateField("acceptTerms", checked);
   };
 
   return (
@@ -174,8 +178,9 @@ function Login() {
                 id="email"
                 type="text"
                 placeholder="Enter your email or phone"
+                name="email"
                 value={formState.email}
-                onChange={handleEmailChange}
+                onChange={handleChange}
                 className={`w-full ${
                   formState.errors.email
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
@@ -191,7 +196,7 @@ function Login() {
                   id="email-error"
                   className="mt-2 text-sm text-red-600 flex gap-2 items-center"
                 >
-                 <CircleAlert className="w-3 h-3"/>
+                  <CircleAlert className="w-3 h-3" />
                   {formState.errors.email}
                 </p>
               )}
@@ -209,8 +214,9 @@ function Login() {
                 id="password"
                 type="password"
                 placeholder="Enter your password"
+                name="password"
                 value={formState.password}
-                onChange={handlePasswordChange}
+                onChange={handleChange}
                 className={`w-full ${
                   formState.errors.password
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
@@ -226,19 +232,20 @@ function Login() {
                   id="password-error"
                   className="mt-2 text-sm text-red-600 flex gap-2 items-center"
                 >
-                   <CircleAlert className="w-3 h-3"/>
+                  <CircleAlert className="w-3 h-3" />
                   {formState.errors.password}
                 </p>
               )}
             </div>
 
-            {/* Terms Checkbox */}
+            {/* Terms Checkbox
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <Checkbox
                   id="checkbox"
+                  name="acceptTerms"
                   checked={formState.acceptTerms}
-                  onCheckedChange={handleTermsChange}
+                  onCheckedChange={handleTermChecked}
                   className="border-1 border-black"
                 />
                 <Label
@@ -256,11 +263,11 @@ function Login() {
               </div>
               {formState.errors.terms && (
                 <p className="text-sm text-red-600 flex gap-2 items-center">
-                   <CircleAlert className="w-3 h-3"/>
+                  <CircleAlert className="w-3 h-3" />
                   {formState.errors.terms}
                 </p>
               )}
-            </div>
+            </div> */}
 
             {/* Submit Error */}
             {formState.errors.submit && (
@@ -317,14 +324,13 @@ function Login() {
                   "Login"
                 )}
               </Button>
-               <div className="w-full text-center mt-5 mb-5">
+              <div className="w-full text-center mt-5 mb-5">
                 <p>or</p>
-               </div>
+              </div>
               {/* Goggle Login.. */}
-               <Button variant="outline"
-               className="w-full">
+              <Button variant="outline" className="w-full">
                 Countinue With Google
-               </Button>
+              </Button>
             </div>
           </form>
 

@@ -2,6 +2,7 @@
 import { Bell } from 'lucide-react'
 import { UserRoundPen } from 'lucide-react';
 import { LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // import { User } from 'lucide-react'
 import {
   DropdownMenu,
@@ -13,8 +14,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React from 'react';
 
 function Header() {
+  const [avatar , setAvatar] = React.useState('')
+  const navigate = useNavigate()
+  const handleLogout = () => {
+    localStorage.removeItem("Users");
+    navigate("/login");
+  
+ 
+  };
+  React.useEffect(() => {
+    const UserData = localStorage.getItem('Users')
+    if(UserData){
+      const Data = JSON.parse(UserData)
+      setAvatar(Data.avatarUrl)  
+    }
+  },[])
+  
   return (
     <>
        <nav className="w-full px-4 py-4 shadow-md">
@@ -41,7 +59,7 @@ function Header() {
             <DropdownMenuTrigger asChild>
             {/* <img src='https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D'/> */}
             <Avatar>
-              <AvatarImage src='https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D'/>
+              <AvatarImage src={avatar}/>
               <AvatarFallback>ZN</AvatarFallback>
             </Avatar>
             </DropdownMenuTrigger>
@@ -51,7 +69,7 @@ function Header() {
                   <UserRoundPen/>   
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut/>
                   Logout
                 </DropdownMenuItem>
