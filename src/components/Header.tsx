@@ -35,8 +35,8 @@ function Header() {
   
   return (
     <>
-       <nav className="w-full px-4 py-4 shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+       <nav className="w-full h-16 px-5 py-4 shadow-md">
+      <div className="flex items-center justify-between ">
         {/* Logo / Brand */}
         <div className= "text-xl font-bold">
           MyWebsite
