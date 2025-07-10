@@ -11,7 +11,7 @@ import UserProfile from './components/UserProfile.js'
 
 function App() {
 
-  return (
+  return (  
     <>
      {/* <Header/>
      <SingUpPage/> */}

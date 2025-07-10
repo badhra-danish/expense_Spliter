@@ -20,10 +20,10 @@ function Header() {
   const [avatar , setAvatar] = React.useState('')
   const navigate = useNavigate()
   const handleLogout = () => {
-    localStorage.removeItem("Users");
-    navigate("/login");
-  
- 
+    localStorage.removeItem("Token");
+    if(!localStorage.getItem("Token")){
+      navigate("/login")
+    } 
   };
   React.useEffect(() => {
     const UserData = localStorage.getItem('Users')

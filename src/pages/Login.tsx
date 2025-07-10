@@ -20,6 +20,7 @@ interface UserResponse {
   avatarUrl: string;
   mobileNumber: string;
   social_login_provider: string;
+  token: string;
 }
 
 // Define the form state interface
@@ -139,7 +140,7 @@ function Login() {
       };
       try{
         const res = await LoginUser(payLoad) as AxiosResponse<{ data:UserResponse }>
-        localStorage.setItem('Users' ,JSON.stringify(res.data.data))
+        localStorage.setItem('Token' ,JSON.stringify(res.data.data.token))
         navigate('/dashboard')
       }catch(error){
         console.error(error)

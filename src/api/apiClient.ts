@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
 
-const BASEURL = 'http://192.168.0.143:8000/api'
+const BASEURL = 'https://paratapay-backend.onrender.com/api'
 const Api:AxiosInstance = axios.create({
   baseURL: BASEURL
 });

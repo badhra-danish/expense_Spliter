@@ -1,13 +1,13 @@
 
 
 export const Authentication = () => {
-    const storedUser  = localStorage.getItem("Users")
+    const Token  = localStorage.getItem("Token");
 
-    if(!storedUser) return false;
+    if(!Token) return false;
 
     try{
-      const user = JSON.parse(storedUser)
-       return !!user.id; 
+      const user = JSON.parse(Token)
+       return !!user;
     }catch(error){
       console.error("User Not Found" , error);
       
