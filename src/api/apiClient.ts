@@ -38,3 +38,39 @@ export const LoginUser = async (body: object) => {
     console.log("Error During Login", error);
   }
 };
+
+/* For Update The User Profile */
+export const UpdateUserData  = async (formData : FormData , id:string) => {
+  try {
+    const response = await Api.patch(`/user/${id}` ,
+      formData ,
+      {
+         headers: {
+          Authorization:`Bearer ${localStorage.getItem("Token")}`
+         }
+      }
+    )
+    return response;
+  }
+  catch(error){
+    console.error("Error Updating User Data" ,error)
+  }
+}
+
+/* Create Groupe*/
+
+export const CreateGroup = async (formData : FormData) => {
+  try{
+    const response = await Api.post("/group" ,
+      formData  ,
+      {
+      headers:{
+        Authorization : `Bearer ${localStorage.getItem("Token")}`
+      }
+    }
+  )
+  return response;
+} catch(error){
+  console.error("Error Creating Group" , error)
+}
+}

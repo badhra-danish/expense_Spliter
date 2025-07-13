@@ -44,7 +44,7 @@ function Layout() {
         </aside>
 
         {/* Main Content (scrollable) */}
-        <main className="h-screen overflow-y-auto bg-gray-50 w-full">
+        <main className="h-screen overflow-y-auto bg-[rgb(239,245,255)] w-full">
           <Outlet />
         </main>
       </div>

@@ -6,7 +6,7 @@ export const Authentication = () => {
     if(!Token) return false;
 
     try{
-      const user = JSON.parse(Token)
+      const user = Token
        return !!user;
     }catch(error){
       console.error("User Not Found" , error);

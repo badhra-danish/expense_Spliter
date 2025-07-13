@@ -3,23 +3,28 @@
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, CircleCheck } from "lucide-react";
 
 import { LoginUser } from "@/api/apiClient";
 import type { AxiosResponse } from "axios";
+import toast from "react-hot-toast";
+import { useLogin } from "../context/Login.tsx";
+import { CircleX } from "lucide-react";
 
-interface UserResponse {
+interface FormatUser {
   id: string;
   email: string;
-  password: string;
   displayName: string;
   avatarUrl: string;
   mobileNumber: string;
-  social_login_provider: string;
+}
+
+export interface UserResponse {
+  formatUser: FormatUser;
   token: string;
 }
 
@@ -49,6 +54,8 @@ const initialState: FormState = {
 function Login() {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<FormState>(initialState);
+  // const { setIsLoggedIn, user, setUser, isLoggedIn } = useLogin();
+  const [Loading, setIsLoggedIn] = React.useState<Boolean>(false);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -138,15 +145,25 @@ function Login() {
         email: formState.email,
         password: formState.password,
       };
-      try{
-        const res = await LoginUser(payLoad) as AxiosResponse<{ data:UserResponse }>
-        localStorage.setItem('Token' ,JSON.stringify(res.data.data.token))
-        navigate('/dashboard')
-      }catch(error){
-        console.error(error)
+      try {
+        setIsLoggedIn(true);
+        const res = (await LoginUser(payLoad)) as AxiosResponse<{
+          data: UserResponse;
+        }>;
+        if (res.data.data.formatUser) {
+          toast.success("Login successfull");
+          localStorage.setItem("Token", res.data.data.token);
+          localStorage.setItem("id", res.data.data.formatUser.id);
+          navigate("/dashboard");
+        } else {
+          toast.error("Login failed. Invalid credentials.");
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoggedIn(false);
       }
-      
-      
+
       console.log("Login successful", formState);
 
       // Reset form to initial state

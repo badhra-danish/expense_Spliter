@@ -6,11 +6,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Link } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
-import DummyUserImg from "../assets/dummyusers.png"
-import { UserPen  } from "lucide-react";
-
-import { CreateAccount } from "@/api/apiClient";  
-
+import DummyUserImg from "../assets/dummyusers.png";
+import { UserPen } from "lucide-react";
+import { CircleX } from "lucide-react";
+import { CreateAccount } from "@/api/apiClient";
+import { toast } from "react-hot-toast";
 
 function SignUpPage() {
   interface ContactType {
@@ -232,19 +232,24 @@ function SignUpPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Proceed with form submission or API call
-      const formdata = new FormData() 
-      if(formData.avatar instanceof File){
-        formdata.append('avatar',formData.avatar)
+      const formdata = new FormData();
+      if (formData.avatar instanceof File) {
+        formdata.append("avatar", formData.avatar);
       }
-      formdata.append('email', formData.email)
-      formdata.append('displayName' , formData.displayName)
-      formdata.append('password' , formData.password)
-      formdata.append('mobileNumber',formData.phoneNumber)
-      formdata.append('social_login_provider' ,'GOOGLE')
-      formdata.append('contact_list' ,JSON.stringify(formData.contact_list))
+      formdata.append("email", formData.email);
+      formdata.append("displayName", formData.displayName);
+      formdata.append("password", formData.password);
+      formdata.append("mobileNumber", formData.phoneNumber);
+      formdata.append("social_login_provider", "GOOGLE");
+      formdata.append("contact_list", JSON.stringify(formData.contact_list));
 
-      CreateAccount(formdata)
-
+      CreateAccount(formdata).then((res) => {
+        if (res.status === 201) {
+          toast.success("Account created successfully!");
+        } else {
+          toast.error("Failed to create acount.");
+        }
+      });
 
       console.log("Submitted:", formData);
 
@@ -257,10 +262,8 @@ function SignUpPage() {
         phoneNumber: "",
         contact_list: [{ name: "", number: "" }],
       });
-      setPreview('')
+      setPreview("");
       setErrors({});
-
-      alert("Account created successfully!");
     } catch (error) {
       setErrors({ general: "Failed to create account. Please try again." });
     } finally {
@@ -299,7 +302,7 @@ function SignUpPage() {
         ...prev,
         avatar: file,
       }));
-       
+
       if (errors.avatar) {
         setErrors((prev) => ({
           ...prev,
@@ -309,11 +312,9 @@ function SignUpPage() {
     }
   };
 
-{/*Create the account of the users using api*/}
-
-
-  
-
+  {
+    /*Create the account of the users using api*/
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen w-screen p-4">
@@ -348,14 +349,13 @@ function SignUpPage() {
               />
               <label htmlFor="avatar" className="cursor-pointer">
                 <div className="relative">
-                <img
-                  src={preview || DummyUserImg} // use a default placeholder if no image
-                  alt="Profile Preview"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
-                />
-                <UserPen className="absolute bottom-0 right-0 text-gray-700 bg-white border-1 rounded-full p-1  "/>
+                  <img
+                    src={preview || DummyUserImg} // use a default placeholder if no image
+                    alt="Profile Preview"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                  />
+                  <UserPen className="absolute bottom-0 right-0 text-gray-700 bg-white border-1 rounded-full p-1  " />
                 </div>
-                
               </label>
             </div>
             {/* <Label htmlFor="avatar" className="block mb-3 font-medium">

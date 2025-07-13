@@ -1,8 +1,178 @@
+// import { Button } from "./ui/button";
+// import React from "react";
+// import UpdateProfile from "./UpdateProfile";
+// import Loader from "./Loader";
+// import type { UpdateProfileRef } from "./UpdateProfile";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogClose,
+//   DialogDescription,
+//   DialogTrigger,
+//   DialogHeader,
+//   DialogFooter,
+//   DialogTitle,
+// } from "./ui/dialog";
+// import axios from "axios";
+
+// interface Contact {
+//   name: string;
+//   number: string;
+// }
+
+// interface UserDetail {
+//   avatarUrl: string;
+//   email: string;
+//   displayName: string;
+//   mobileNumber: string;
+//   contact_list: Contact[];
+// }
+
+// function UserProfile() {
+//   const [open, setOpen] = React.useState(false);
+//   const [Loading, setLoading] = React.useState(false);
+//   const profileRef = React.useRef<UpdateProfileRef>(null);
+
+//   const handleDialogUpdate = () => {
+//     profileRef.current?.handleUpdate();
+//   };
+//   const [userDetail, setUserDetail] = React.useState<UserDetail | null>();
+
+//   const getUserById = async () => {
+//     try {
+//       setLoading(true);
+//       const id = localStorage.getItem("id");
+//       if (!id) return; // exit early if no id
+
+//       const res = await axios.get(
+//         "https://paratapay-backend.onrender.com/api/user",
+//         {
+//           params: {
+//             search: id,
+//           },
+//           headers: {
+//             Authorization: `Bearer ${localStorage.getItem("Token")}`,
+//           },
+//         }
+//       );
+//       const data = res.data?.data[0];
+//       if (data) {
+//         setUserDetail(data);
+//       }
+//     } catch (error) {
+//       console.error("Error fetching user data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // console.log("userDetail",userDetail);
+//   React.useEffect(() => {
+//     getUserById();
+//   }, []);
+
+//   return (
+//     <>
+//       <div className="w-full">
+//         <div className="flex items-center justify-between pt-6 px-11">
+//           <h1 className="text-3xl font-medium">User Profile</h1>
+//           <Dialog open={open} onOpenChange={setOpen}>
+//             <DialogTrigger asChild>
+//               <Button variant="default">Edit-Profile</Button>
+//             </DialogTrigger>
+//             <DialogContent>
+//               <DialogHeader>
+//                 <DialogTitle>Update Profile</DialogTitle>
+//                 <DialogDescription>
+//                   Make changes to your profile here. Click save when you&apos;re
+//                   done.
+//                 </DialogDescription>
+//               </DialogHeader>
+
+//               <UpdateProfile ref={profileRef} onClose={() => setOpen(false)} />
+//               <DialogFooter>
+//                 <DialogClose asChild>
+//                   <Button type="button">Close</Button>
+//                 </DialogClose>
+//                 <Button type="button" onClick={handleDialogUpdate}>
+//                   Save Change
+//                 </Button>
+//               </DialogFooter>
+//             </DialogContent>
+//           </Dialog>
+//         </div>
+
+//         <div className=" flex items-center justify-center">
+//           {Loading ? (
+//             <div className="flex items-center justify-center h-screen">
+//               {" "}
+//               <Loader />
+//             </div>
+//           ) : (
+//             <>
+//               <div className="w-full p-6 rounded-2xl">
+//                 <div className="flex items-center justify-star px-3">
+//                   <img
+//                     className="w-20 h-20 object-fit rounded-full"
+//                     src={userDetail?.avatarUrl}
+//                   />
+//                 </div>
+//                 <div className="flex flex-wrap gap-1.5 justify-start items-center">
+//                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
+//                     <p className="font-bold">Email:</p>
+//                     <p className="text-gray-500">{userDetail?.email}</p>
+//                   </div>
+//                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
+//                     <p className="font-bold">DisplayName:</p>
+//                     <p className="text-gray-500">{userDetail?.displayName}</p>
+//                   </div>
+//                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
+//                     <p className="font-bold">Mobile Number:</p>
+//                     <p className="text-gray-500">{userDetail?.mobileNumber}</p>
+//                   </div>
+//                 </div>
+//                 <div>
+//                   <div className="p-3">
+//                     <p className="font-bold">Conatct List</p>
+//                     <div className="flex flex-wrap">
+//                       {userDetail &&
+//                         userDetail?.contact_list?.map((contact, i) => (
+//                           <div className="p-2 " key={i}>
+//                             <div className="bg-white w-50 p-2 rounded-sm">
+//                               <p>{contact.name}</p> <p>{contact.number}</p>
+//                             </div>
+//                           </div>
+//                         ))}
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </>
+//           )}
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// export default UserProfile;
 import { Button } from "./ui/button";
 import React from "react";
 import UpdateProfile from "./UpdateProfile";
+import Loader from "./Loader";
 import type { UpdateProfileRef } from "./UpdateProfile";
-import { Dialog ,DialogContent,DialogClose,DialogDescription,DialogTrigger, DialogHeader, DialogFooter, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogDescription,
+  DialogTrigger,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
+import axios from "axios";
+
 interface Contact {
   name: string;
   number: string;
@@ -18,76 +188,129 @@ interface UserDetail {
 
 function UserProfile() {
   const [open, setOpen] = React.useState(false);
+  const [Loading, setLoading] = React.useState(false);
+  const [saveLoading, setSaveLoading] = React.useState(false);
   const profileRef = React.useRef<UpdateProfileRef>(null);
 
-  const handleDialogUpdate = () => {
-    profileRef.current?.handleUpdate();
+  const handleDialogUpdate = async () => {
+    try {
+      setSaveLoading(true);
+      profileRef.current?.handleUpdate();
+      // Close dialog after successful update
+      setOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setSaveLoading(false);
+    }
   };
+
   const [userDetail, setUserDetail] = React.useState<UserDetail | null>();
 
-  React.useEffect(() => {
-    const Users = localStorage.getItem("Users");
-    if (Users) {
-      const data = JSON.parse(Users);
-      if(typeof data.contact_list === 'string'){
-        data.contact_list = JSON.parse(data.contact_list)
+  const getUserById = async () => {
+    try {
+      setLoading(true);
+      const id = localStorage.getItem("id");
+      if (!id) return; // exit early if no id
+
+      const res = await axios.get(
+        "https://paratapay-backend.onrender.com/api/user",
+        {
+          params: {
+            search: id,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("Token")}`,
+          },
+        }
+      );
+      const data = res.data?.data[0];
+      if (data) {
+        setUserDetail(data);
       }
-      setUserDetail(data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // console.log("userDetail",userDetail);
+  React.useEffect(() => {
+    getUserById();
   }, []);
+
   return (
     <>
-    
       <div className="w-full">
         <div className="flex items-center justify-between pt-6 px-11">
           <h1 className="text-3xl font-medium">User Profile</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-             <Button variant="default">Update-Profile</Button>
+              <Button variant="default">Edit-Profile</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Update Profile</DialogTitle>
-              <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
-            </DialogDescription>
+                <DialogDescription>
+                  Make changes to your profile here. Click save when you&apos;re
+                  done.
+                </DialogDescription>
               </DialogHeader>
-             
-            <UpdateProfile ref={profileRef} onClose={() => setOpen(false)} />
+
+              <UpdateProfile ref={profileRef} onClose={() => setOpen(false)} />
               <DialogFooter>
                 <DialogClose asChild>
-                <Button type="button">Close</Button>
+                  <Button type="button" disabled={saveLoading}>
+                    Close
+                  </Button>
                 </DialogClose>
-                <Button type="button" onClick={handleDialogUpdate}>Save Change</Button> 
+                <Button
+                  type="button"
+                  onClick={handleDialogUpdate}
+                  disabled={saveLoading}
+                >
+                  {saveLoading ? (
+                    <>
+                      <Loader />
+                      <span className="ml-2">Saving...</span>
+                    </>
+                  ) : (
+                    "Save Change"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          
         </div>
 
         <div className=" flex items-center justify-center">
-          {userDetail && (
+          {Loading ? (
+            <div className="flex items-center justify-center h-screen">
+              {" "}
+              <Loader />
+            </div>
+          ) : (
             <>
               <div className="w-full p-6 rounded-2xl">
                 <div className="flex items-center justify-star px-3">
                   <img
                     className="w-20 h-20 object-fit rounded-full"
-                    src={userDetail.avatarUrl}
+                    src={userDetail?.avatarUrl}
                   />
                 </div>
                 <div className="flex flex-wrap gap-1.5 justify-start items-center">
                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
                     <p className="font-bold">Email:</p>
-                    <p className="text-gray-500">{userDetail.email}</p>
+                    <p className="text-gray-500">{userDetail?.email}</p>
                   </div>
                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
                     <p className="font-bold">DisplayName:</p>
-                    <p className="text-gray-500">{userDetail.displayName}</p>
+                    <p className="text-gray-500">{userDetail?.displayName}</p>
                   </div>
                   <div className="p-3 rounded-2xl mt-4 flex flex-col w-90 gap-1.5">
                     <p className="font-bold">Mobile Number:</p>
-                    <p className="text-gray-500">{userDetail.mobileNumber}</p>
+                    <p className="text-gray-500">{userDetail?.mobileNumber}</p>
                   </div>
                 </div>
                 <div>
@@ -95,9 +318,9 @@ function UserProfile() {
                     <p className="font-bold">Conatct List</p>
                     <div className="flex flex-wrap">
                       {userDetail &&
-                        userDetail?.contact_list.map((contact , i) => (
+                        userDetail?.contact_list?.map((contact, i) => (
                           <div className="p-2 " key={i}>
-                            <div className="bg-gray-100 w-50 p-2 rounded-sm">
+                            <div className="bg-white w-50 p-2 rounded-sm">
                               <p>{contact.name}</p> <p>{contact.number}</p>
                             </div>
                           </div>

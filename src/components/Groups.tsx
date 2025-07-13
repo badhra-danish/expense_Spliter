@@ -25,109 +25,115 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-
-interface groupMember {
-  name: string;
-  number: string;
-}
+import DummyUserImg from "../assets/dummyusers.png";
+import { UserPen } from "lucide-react";
+import { CreateGroup } from "@/api/apiClient";
+import toast from "react-hot-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+} from "@/components/ui/select";
+// interface groupMember {
+//   name: string;
+//   number: string;
+// }
 
 interface Groupdata {
-  avatarUrl: File  | null;
+  avatarUrl: File | null;
   groupName: string;
+  groupType: string;
   groupDescription: string;
-  groupMember: groupMember[];
 }
 
 function Groups() {
+  const [isLoading, setIsLoading] = React.useState<Boolean>(false);
   const [groupData, setGroupData] = React.useState<Groupdata>({
     avatarUrl: null,
     groupName: "",
+    groupType: "",
     groupDescription: "",
-    groupMember: [{ name: "", number: "" }],
   });
-
+  const [previewimg, setPreviewImg] = React.useState<string | null>();
   const [group, setGroup] = React.useState([]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    if (!groupData) return;
     setGroupData({
       ...groupData,
       [e.target.name]: e.target.value,
     });
   };
 
+  const handleGroupTypeChange = (value: string) => {
+    setGroupData((prev) => ({
+      ...prev,
+      groupType: value,
+    }));
+  };
   const handleimageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (!groupData || !file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImg(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    console.log(previewimg);
+
     if (file) {
-      setGroupData((prev) => ({
-        ...prev,
-        avatarUrl: file,
-      }));
+      setGroupData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          avatarUrl: file,
+        };
+      });
     }
   };
+  console.log(groupData);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const id = localStorage.getItem("id");
+    if (!id) return;
+    const formData = new FormData();
+    if (!groupData) return;
+    formData.append("groupAvatar", groupData.avatarUrl as File);
+    formData.append("name", groupData.groupName);
+    formData.append("groupType", groupData.groupType);
+    formData.append("description", groupData.groupDescription);
+    formData.append("createdBy", id);
 
-  // const handleimageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     const imageUrl = URL.createObjectURL(file); // ✅ convert File to URL
-  
-  //     setGroupData((prev) => ({
-  //       ...prev,
-  //       avatarUrl: imageUrl, // ✅ store the preview URL
-  //     }));
-  //   }
-  // };
-  
-
-  const handleGroppMemeber = (
-    index: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newMember = [...groupData.groupMember];
-    newMember[index] = {
-      ...newMember[index],
-      [e.target.name]: e.target.value,
-    };
-    setGroupData({
-      ...groupData,
-      groupMember: newMember,
-    });
+    try {
+      setIsLoading(true);
+      const toastId = toast.loading("Creating Group...");
+      //toastId;
+      const response = await CreateGroup(formData);
+      if (response?.status === 201) {
+        toast.success("Group Created Successfully");
+        setGroupData({
+          avatarUrl: null,
+          groupName: "",
+          groupType: "",
+          groupDescription: "",
+        });
+        toast.dismiss(toastId);
+        setPreviewImg(null);
+      } else {
+        toast.dismiss(toastId);
+        toast.error("Failed To Create Group");
+      }
+    } catch (error) {
+      toast.error("Failed to Create Group");
+    } finally {
+      setIsLoading(false);
+    }
   };
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   const existingGroups = JSON.parse(
-  //     localStorage.getItem("groupData") || "[]"
-  //   );
-
-  //   if (existingGroups) {
-  //     const updatedGroups = [...existingGroups, groupData];
-  //     localStorage.setItem("groupData", JSON.stringify(updatedGroups));
-  //   }
-
-  //   setGroupData({
-  //     avatarUrl: null,
-  //     groupName: "",
-  //     groupDescription: "",
-  //     groupMember: [{ name: "", number: "" }],
-  //   });
-  // };
-
-  // React.useEffect(() => {
-  //   const fetchGroup = () => {
-  //     const savedGroup = localStorage.getItem("groupData");
-  //     if (savedGroup) {
-  //       const parsed = JSON.parse(savedGroup);
-  //       setGroup(parsed);
-  //     }
-  //   };
-
-  //   fetchGroup();
-  // }, []); // <-- empty dependency array = run once
-
-  // React.useEffect(() => {
-  //   console.log(group);
-  // }, [group]);
 
   return (
     <>
@@ -140,76 +146,71 @@ function Groups() {
                 <Button>Create Groups</Button>
               </DialogTrigger>
               <DialogContent>
-                <form className="w-full">
+                <form onSubmit={handleSubmit} className="w-full">
                   <DialogHeader>
                     <DialogTitle>Create a Group</DialogTitle>
                   </DialogHeader>
                   <div>
-                    <div className="my-4">
-                      <Label className="mb-3">Upload Image</Label>
+                    <div className="w-full h-24 flex items-center justify-center">
                       <Input
+                        id="avatar"
                         type="file"
                         accept="image/*"
-                        name="file"
                         onChange={handleimageUpload}
+                        className="hidden"
                       />
+                      <Label htmlFor="avatar" className="cursor-pointer">
+                        <div className="relative ">
+                          <img
+                            src={previewimg || DummyUserImg} // use a default placeholder if no image
+                            alt="Profile Preview"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                          />
+                          <UserPen className="absolute bottom-0 right-0 text-gray-700 bg-white border-1 rounded-full p-1  " />
+                        </div>
+                      </Label>
                     </div>
                     <div className="my-4">
                       <Label className="mb-3">Enter the Group Name</Label>
                       <Input
                         type="text"
                         placeholder="Enter Group Name"
-                        value={groupData.groupName}
+                        value={groupData?.groupName}
                         name="groupName"
                         onChange={handleChange}
                       />
+                    </div>
+                    <div className="my-4">
+                      <Label className="mb-3">Group Type</Label>
+                      <Select
+                        onValueChange={handleGroupTypeChange}
+                        value={groupData.groupType}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="EQUAL_SPLIT">
+                              EQUAL_SPLITE
+                            </SelectItem>
+                            <SelectItem value="CUSTOM_SPLIT">
+                              CUSTOM_SPLITE
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="my-4">
                       <Label className="mb-3">Enter Description</Label>
                       <Textarea
                         placeholder="Type Your Descriptions.."
                         name="groupDescription"
-                        value={groupData.groupDescription}
+                        value={groupData?.groupDescription}
                         className="w-full h-[100px] overflow-y-auto resize-none whitespace-pre-wrap break-words custom-scroll rounded-md"
                         onChange={handleChange}
                       />
                     </div>
-                    {/* <div className="my-4">
-                      <Label className="mb-3">Group Members</Label>
-                      <Command>
-                        <CommandInput placeholder="Search the Members" />
-                        <CommandList>
-                          <CommandEmpty>No Member Found</CommandEmpty>
-                          <CommandGroup>
-                             <CommandItem>
-                                    <span>Clander</span>
-                                </CommandItem>
-                                <CommandItem>
-                                    <span>Smile</span>
-                                </CommandItem>
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </div> */}
-                    <Label>Add Memebrs</Label>
-                    {groupData.groupMember?.map((member, i) => (
-                      <div className="flex gap-3 mt-2" key={i}>
-                        <Input
-                          type="text"
-                          placeholder="Name"
-                          name="name"
-                          value={member.name}
-                          onChange={(e) => handleGroppMemeber(i, e)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Number"
-                          value={member.number}
-                          name="number"
-                          onChange={(e) => handleGroppMemeber(i, e)}
-                        />
-                      </div>
-                    ))}
                   </div>
 
                   <div>
@@ -217,7 +218,9 @@ function Groups() {
                       <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                       </DialogClose>
-                      <Button type="submit">Create Group</Button>
+                      <Button type="submit">
+                        {isLoading ? "Creating..." : "Create Group"}
+                      </Button>
                     </DialogFooter>
                   </div>
                 </form>
@@ -228,13 +231,12 @@ function Groups() {
 
         {/* Group display . . .  */}
         <div className="mt-5">
-         
           <div className="w-full bg-amber-100 p-5 rounded-2xl">
-             <Avatar>
-              <AvatarImage src=""/>
-             </Avatar>
-             <p>Badhra</p>
-         </div> 
+            <Avatar>
+              <AvatarImage src="" />
+            </Avatar>
+            <p>Badhra</p>
+          </div>
         </div>
       </div>
     </>
