@@ -171,8 +171,23 @@ import {
   DialogFooter,
   DialogTitle,
 } from "./ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import axios from "axios";
-
+import { DeleteUser, GetUserbyId } from "@/api/apiClient";
+import toast from "react-hot-toast";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { useLogin } from "@/context/Login";
 interface Contact {
   name: string;
   number: string;
@@ -187,6 +202,8 @@ interface UserDetail {
 }
 
 function UserProfile() {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useLogin();
   const [open, setOpen] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
   const [saveLoading, setSaveLoading] = React.useState(false);
@@ -210,26 +227,36 @@ function UserProfile() {
   const getUserById = async () => {
     try {
       setLoading(true);
-      const id = localStorage.getItem("id");
-      if (!id) return; // exit early if no id
 
-      const res = await axios.get(
-        "https://paratapay-backend.onrender.com/api/user",
-        {
-          params: {
-            search: id,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("Token")}`,
-          },
-        }
-      );
-      const data = res.data?.data[0];
-      if (data) {
+      const res = await GetUserbyId();
+      if (res?.data.data) {
+        const data = res.data?.data[0];
         setUserDetail(data);
+      } else {
+        toast.error("Failed To load");
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    try {
+      setLoading(true);
+      const res = await DeleteUser();
+      if (res?.status === 200) {
+        toast.success("Account Delete Successfully");
+        Cookies.remove("Token");
+        Cookies.remove("UserId");
+        navigate("/signup");
+        setUserDetail(null);
+      } else {
+        toast.error("Failed To Delete Account");
+      }
+    } catch (error) {
+      toast.error("Failed To Delete Account");
     } finally {
       setLoading(false);
     }
@@ -327,6 +354,36 @@ function UserProfile() {
                         ))}
                     </div>
                   </div>
+                </div>
+                <div className="mt-7">
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <Button className="bg-red-500 hover:bg-red-500">
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure Delete This Account?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete your account and remove your data from our
+                          servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="hover:bg-red-500 bg-red-500"
+                          onClick={handleDeleteUser}
+                        >
+                          {Loading ? "Deleteing..." : "Delete"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </>

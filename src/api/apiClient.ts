@@ -1,12 +1,13 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
+import Cookies from "js-cookie";
 
-const BASEURL = 'https://paratapay-backend.onrender.com/api'
+const BASEURL = import.meta.env.VITE_BASE_API_URL;
 const Api:AxiosInstance = axios.create({
   baseURL: BASEURL
 });
-
-
+const token = Cookies.get("Token")
+const id = Cookies.get("UserId");
 {
   /* Fot the Post  or the create the Acounnt*/
 }
@@ -38,6 +39,24 @@ export const LoginUser = async (body: object) => {
     console.log("Error During Login", error);
   }
 };
+/* Get User By There Id */
+
+export const GetUserbyId = () => {
+  try{
+
+    const response  =  Api.get("/user" , {
+      params: {
+        search : id
+      }, 
+      headers: {
+            Authorization: `Bearer ${token}`,
+          },
+    })
+    return response;
+  }catch(error){
+    console.error("Error for get User" ,error);
+  }
+}
 
 /* For Update The User Profile */
 export const UpdateUserData  = async (formData : FormData , id:string) => {
@@ -46,7 +65,7 @@ export const UpdateUserData  = async (formData : FormData , id:string) => {
       formData ,
       {
          headers: {
-          Authorization:`Bearer ${localStorage.getItem("Token")}`
+          Authorization:`Bearer ${token}`
          }
       }
     )
@@ -56,6 +75,21 @@ export const UpdateUserData  = async (formData : FormData , id:string) => {
     console.error("Error Updating User Data" ,error)
   }
 }
+/* Delete User  by ther there id */
+
+export const DeleteUser = async () => {
+   try{
+    const response = await Api.delete( `user/${id}` , {
+      headers: {
+        Authorization:`Bearer ${token}`
+      }
+    })
+    return response;
+   }catch(error){
+    console.error("Error In the Delete Users" ,error);
+   }
+}
+
 
 /* Create Groupe*/
 
@@ -65,7 +99,7 @@ export const CreateGroup = async (formData : FormData) => {
       formData  ,
       {
       headers:{
-        Authorization : `Bearer ${localStorage.getItem("Token")}`
+        Authorization : `Bearer ${token}`
       }
     }
   )

@@ -37,7 +37,7 @@ export default function Sidebar() {
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        className="flex w-[280px] h-screen flex-col pt-2 border-r-2 border-[rgb(239,245,255)]"
+        className="flex w-[280px] h-screen flex-col pt-2 border-r-2 border-[rgb(239,245,255)] dark:bg-black"
       >
         <div
           className={
@@ -85,7 +85,7 @@ export default function Sidebar() {
           Others
         </div>
         <div className="h-full">
-            <div className="relative h-full">
+          <div className="relative h-full">
             <div className="flex gap-3 px-4 py-4 cursor-pointer absolute bottom-20 left-1.5 hover:text-red-600">
               <LogOut />
               LogOut

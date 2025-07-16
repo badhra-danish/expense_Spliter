@@ -2,6 +2,7 @@ import React from "react";
 import DummyUserImg from "../assets/dummyusers.png";
 import { Button } from "./ui/button";
 import { UpdateUserData } from "@/api/apiClient";
+import { GetUserbyId } from "@/api/apiClient";
 interface Contact {
   name: string;
   number: string;
@@ -22,7 +23,6 @@ export interface UpdateProfileRef {
   handleUpdate: () => void;
 }
 
-import axios from "axios";
 import { UserPen } from "lucide-react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
@@ -38,23 +38,12 @@ const UpdateProfile = forwardRef<UpdateProfileRef, { onClose: () => void }>(
     const getUserById = async () => {
       try {
         setLoading(true);
-        const id = localStorage.getItem("id");
-        if (!id) return;
-        const res = await axios.get(
-          "https://paratapay-backend.onrender.com/api/user",
-          {
-            params: {
-              search: id,
-            },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("Token")}`,
-            },
-          }
-        );
-        const data = res.data.data[0];
-        if (data) {
+        const res = await GetUserbyId();
+        if (res?.data.data) {
+          const data = res.data?.data[0];
           setUserDetail(data);
-          setPreview(data.avatarUrl || DummyUserImg);
+        } else {
+          toast.error("Failed To load");
         }
       } catch (error) {
         console.error("Error Fetching user Data", error);
@@ -62,8 +51,6 @@ const UpdateProfile = forwardRef<UpdateProfileRef, { onClose: () => void }>(
         setLoading(false);
       }
     };
-    // console.log("abc", userDetail);
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!userDetail) return;
       setUserDetail({
@@ -193,7 +180,7 @@ const UpdateProfile = forwardRef<UpdateProfileRef, { onClose: () => void }>(
                     <Label htmlFor="avatar" className="cursor-pointer">
                       <div className="relative ">
                         <img
-                          src={preview || userDetail?.avatarUrl} // use a default placeholder if no image
+                          src={preview || userDetail?.avatarUrl || DummyUserImg} // use a default placeholder if no image
                           alt="Profile Preview"
                           className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
                         />

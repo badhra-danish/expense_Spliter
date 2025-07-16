@@ -1,5 +1,3 @@
-//
-
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -8,10 +6,10 @@ import { useNavigate } from "react-router-dom";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { CircleAlert, CircleCheck } from "lucide-react";
-
 import { LoginUser } from "@/api/apiClient";
 import type { AxiosResponse } from "axios";
 import toast from "react-hot-toast";
+import Cookies from "js-cookie";
 import { useLogin } from "../context/Login.tsx";
 import { CircleX } from "lucide-react";
 
@@ -54,8 +52,8 @@ const initialState: FormState = {
 function Login() {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<FormState>(initialState);
-  // const { setIsLoggedIn, user, setUser, isLoggedIn } = useLogin();
-  const [Loading, setIsLoggedIn] = React.useState<Boolean>(false);
+  const { setIsLoggedIn } = useLogin();
+  const [Loading, setIsLoadingIn] = React.useState<Boolean>(false);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -146,22 +144,24 @@ function Login() {
         password: formState.password,
       };
       try {
-        setIsLoggedIn(true);
         const res = (await LoginUser(payLoad)) as AxiosResponse<{
           data: UserResponse;
         }>;
         if (res.data.data.formatUser) {
           toast.success("Login successfull");
-          localStorage.setItem("Token", res.data.data.token);
-          localStorage.setItem("id", res.data.data.formatUser.id);
+          Cookies.set("Token", res.data.data.token, { expires: 7 });
+          Cookies.set("UserId", res.data.data.formatUser.id, { expires: 7 });
+          setIsLoggedIn(true);
+          // localStorage.setItem("Token", res.data.data.token);
+          // localStorage.setItem("id", res.data.data.formatUser.id);
           navigate("/dashboard");
         } else {
           toast.error("Login failed. Invalid credentials.");
         }
       } catch (error) {
         console.error(error);
+        toast.error("Login failed. Invalid credentials.");
       } finally {
-        setIsLoggedIn(false);
       }
 
       console.log("Login successful", formState);

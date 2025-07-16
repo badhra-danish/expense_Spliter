@@ -1,7 +1,12 @@
 import { Bell, Search } from "lucide-react";
 import { UserRoundPen } from "lucide-react";
 import { LogOut } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
+import { useTheme } from "@/context/Darkmode";
 import { useNavigate } from "react-router-dom";
+import { GetUserbyId } from "@/api/apiClient";
+import toast from "react-hot-toast";
+import Cookies from "js-cookie";
 // import { User } from 'lucide-react'
 import {
   DropdownMenu,
@@ -15,62 +20,56 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import React from "react";
 import { useLogin } from "../context/Login.tsx";
-import axios from "axios";
 
 function Header() {
-  const { user, setUser } = useLogin();
+  const { setIsLoggedIn } = useLogin();
+  const { theme, toggleTheme } = useTheme();
   const [avatar, setAvatar] = React.useState<string>("");
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("id");
-    if (!localStorage.getItem("Token")) {
+    Cookies.remove("Token");
+    Cookies.remove("UserId");
+    setIsLoggedIn(false);
+    if (!Cookies.get("Token")) {
       navigate("/login");
     }
-    setUser(null);
   };
-  console.log(user);
-
-  // React.useEffect(() => {
-  //   const UserData = localStorage.getItem('Users')
-  //   if(UserData){
-  //     const Data = JSON.parse(UserData)
-  //     setAvatar(Data.avatarUrl)
-  //   }
-  // },[])
 
   const getAvatarUrl = async () => {
-      const id = localStorage.getItem("id");
-    if (!id) return; // exit early if no id
     try {
-      const res = await axios.get(
-        "https://paratapay-backend.onrender.com/api/user",
-        {
-          params: {
-            search: id,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("Token")}`,
-          },
-        }
-      );
-      setAvatar(res.data?.data[0].avatarUrl);
+      const res = await GetUserbyId();
+      if (res?.data.data) {
+        const data = res.data?.data[0].avatarUrl;
+        setAvatar(data);
+      } else {
+        toast.error("Failed To load");
+      }
+      // const res = await axios.get(
+      //   "https://paratapay-backend.onrender.com/api/user",
+      //   {
+      //     params: {
+      //       search: id,
+      //     },
+      //     headers: {
+      //       Authorization: `Bearer ${localStorage.getItem("Token")}`,
+      //     },
+      //   }
+      // );
+      // setAvatar(res.data?.data[0].avatarUrl);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
   };
 
-  
   React.useEffect(() => {
     getAvatarUrl();
-  },[])  
+  }, []);
   // UserData.map((data) => {
   //   if(data.avatarUrl){
   //     setAvatar(data.avatarUrl);
   //   }
   // })
 
-  
   return (
     <>
       <nav className="w-full h-20 px-5 py-4 shadow-md">
@@ -80,6 +79,10 @@ function Header() {
 
           {/* Right side: Notification + User */}
           <div className="flex items-center space-x-10">
+            <div onClick={toggleTheme}>
+              {theme === "light" ? <Moon /> : <Sun />}
+            </div>
+
             {/* Notification Icon */}
             <div className="relative">
               <Bell />
